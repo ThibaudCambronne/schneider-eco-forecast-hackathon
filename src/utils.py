@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime, timedelta
+import time
 import xml.etree.ElementTree as ET
 import pandas as pd
 from datetime import datetime, timedelta
@@ -114,9 +115,49 @@ def make_url(base_url, params):
     return f"{base_url}?{query_string}"
 
 def perform_get_request(base_url, params):
-    url = make_url(base_url, params)
-    response = requests.get(url)
-    if response.status_code == 200:
+    retry_nb = 0
+    success = False
+    while not success and retry_nb < 5:
+        if retry_nb != 0:
+            time.sleep(5)
+        url = make_url(base_url, params)
+        response = requests.get(url)
+        success = response.status_code == 200
+        retry_nb += 1
+    if success:
         return response.text
     else:
         return response.content
+
+def init_psr_type_to_gen_type():
+    psr_type_to_gen_type = {
+        "A03" : "Mixed",
+        "A04" : "Generation",
+        "A05" : "Load",
+        "B01" : "Biomass",
+        "B02" : "Fossil Brown coal/Lignite",
+        "B03" : "Fossil Coal-derived gas",
+        "B04" : "Fossil Gas",
+        "B05" : "Fossil Hard coal",
+        "B06" : "Fossil Oil",
+        "B07" : "Fossil Oil shale",
+        "B08" : "Fossil Peat",
+        "B09" : "Geothermal",
+        "B10" : "Hydro Pumped Storage",
+        "B11" : "Hydro Run-of-river and poundage",
+        "B12" : "Hydro Water Reservoir",
+        "B13" : "Marine",
+        "B14" : "Nuclear",
+        "B15" : "Other renewable",
+        "B16" : "Solar",
+        "B17" : "Waste",
+        "B18" : "Wind Offshore",
+        "B19" : "Wind Onshore",
+        "B20" : "Other",
+        "B21" : "AC Link",
+        "B22" : "DC Link",
+        "B23" : "Substation",
+        "B24" : "Transformer"
+        }
+    psr_type_to_gen_type = {k: v.replace(" ", "_").lower() for k, v in psr_type_to_gen_type.items()}
+    return psr_type_to_gen_type

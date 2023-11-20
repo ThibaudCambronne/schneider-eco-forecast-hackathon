@@ -6,7 +6,26 @@ def load_data(file_path):
     return df
 
 def split_data(df):
-    # TODO: Split data into training and validation sets (the test set is already provided in data/test_data.csv)
+    # convert an array of values into a dataset matrix
+    def create_dataset(dataset, look_back=1, col=0):
+        dataX, dataY = [], []
+        for i in range(len(dataset)-look_back-1):
+            a = dataset[i:(i+look_back), col]
+            dataX.append(a)
+            dataY.append(dataset[i + look_back, col])
+        return np.array(dataX), np.array(dataY)
+    
+    # load the dataset
+    dataset = df.values
+    dataset = dataset.astype('float32')
+    # split into train and test sets
+    train_size = int(len(dataset) * 0.8)
+    test_size = len(dataset) - train_size
+    train, test = dataset[0:train_size, :], dataset[train_size:len(dataset), :]
+    # reshape dataset
+    look_back = 5
+    trainX, trainY = create_dataset(train, look_back, col)
+    testX, testY = create_dataset(test, look_back, col)
     return X_train, X_val, y_train, y_val
 
 def train_model(X_train, y_train):

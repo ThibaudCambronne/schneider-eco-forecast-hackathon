@@ -3,6 +3,9 @@ import datetime
 import pandas as pd
 from utils import perform_get_request, xml_to_load_dataframe, xml_to_gen_data
 
+
+LIST_OF_GREEN_PSR_TYPES = ["B01", "B09", "B10", "B11", "B12", "B13", "B15", "B16", "B18", "B19"]
+
 def get_load_data_from_entsoe(regions, periodStart='202302240000', periodEnd='202303240000', output_path='./data'):
     
     # TODO: There is a period range limit of 1 year for this API. Process in 1 year chunks if needed
@@ -30,7 +33,7 @@ def get_load_data_from_entsoe(regions, periodStart='202302240000', periodEnd='20
         response_content = perform_get_request(url, params)
 
         # Response content is a string of XML data
-        df = xml_to_load_dataframe(response_content, 'Load')
+        df = xml_to_load_dataframe(response_content) # 'Load'
 
         # Save the DataFrame to a CSV file
         df.to_csv(f'{output_path}/load_{region}.csv', index=False)
@@ -69,8 +72,9 @@ def get_gen_data_from_entsoe(regions, periodStart='202302240000', periodEnd='202
 
         # Save the dfs to CSV files
         for psr_type, df in dfs.items():
-            # Save the DataFrame to a CSV file
-            df.to_csv(f'{output_path}/gen_{region}_{psr_type}.csv', index=False)
+            if psr_type in LIST_OF_GREEN_PSR_TYPES:
+                # Save the DataFrame to a CSV file
+                df.to_csv(f'{output_path}/gen_{region}_{psr_type}.csv', index=False)
     
     return
 
@@ -80,19 +84,19 @@ def parse_arguments():
     parser.add_argument(
         '--start_time', 
         type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'), 
-        default=datetime.datetime(2023, 1, 1), 
+        default=datetime.datetime(2022, 1, 1), 
         help='Start time for the data to download, format: YYYY-MM-DD'
     )
     parser.add_argument(
         '--end_time', 
         type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'), 
-        default=datetime.datetime(2023, 1, 2), 
+        default=datetime.datetime(2023, 1, 1), 
         help='End time for the data to download, format: YYYY-MM-DD'
     )
     parser.add_argument(
         '--output_path', 
         type=str, 
-        default='./data',
+        default='./data/raw',
         help='Name of the output file'
     )
     return parser.parse_args()
@@ -112,7 +116,9 @@ def main(start_time, end_time, output_path):
     }
 
     # Transform start_time and end_time to the format required by the API: YYYYMMDDHHMM
+    start_time += datetime.timedelta(hours=1) # Add 1 hour to the start to avoid getting more than a year
     start_time = start_time.strftime('%Y%m%d%H%M')
+    end_time += datetime.timedelta(hours=1) # Add 1 hour to the end time to get the last hour of data
     end_time = end_time.strftime('%Y%m%d%H%M')
 
     # Get Load data from ENTSO-E

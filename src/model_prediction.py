@@ -1,8 +1,9 @@
 import pandas as pd
 import argparse
 
-def load_data(file_path):
-    # TODO: Load test data from CSV file
+def load_data(file_path="data/processed_data.csv"):
+    df = pd.read_csv(file_path, parse_dates=True, index_col=0)
+    df = df.drop(index=[df.index[0], df.index[-1]], axis=1)
     return df
 
 def load_model(model_path):
