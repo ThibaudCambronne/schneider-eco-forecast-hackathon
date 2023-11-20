@@ -1,4 +1,4 @@
-# SE-Europe-Data_Challenge_Template
+# SE-Europe-Data Challenge
 
 This repository is for the NUWE - Schneider Electric European Data Science Challenge in November 2023.
 
